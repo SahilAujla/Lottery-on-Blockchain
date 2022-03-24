@@ -8,6 +8,34 @@ import styles from "../styles/Home.module.css";
 import { subgraphQuery } from "../utils";
 
 export default function Home() {
+  let showWarning = true;
+  // Change network to Mumbai button
+  async function switchAddMumbai() {
+    let provider = await web3ModalRef.current.connect();
+    try {
+      provider.send("wallet_switchEthereumChain", [
+        {
+          chainId: "0x13881",
+        },
+      ]);
+    } catch (err) {
+      provider.send("wallet_addEthereumChain", [
+        {
+          chainId: "0x13881",
+          chainName: "Mumbai Testnet",
+          rpcUrls: ["https://rpc-mumbai.maticvigil.com/"],
+          iconUrls: ["https://polygonscan.com/images/favicon.ico"],
+          nativeCurrency: {
+            name: "MATIC",
+            symbol: "MATIC",
+            decimals: 18,
+          },
+          blockExplorerUrls: ["https://polygonscan.com/"],
+        },
+      ]);
+    }
+  }
+
   const zero = BigNumber.from("0");
   // walletConnected keep track of whether the user's wallet is connected or not
   const [walletConnected, setWalletConnected] = useState(false);
@@ -60,6 +88,7 @@ export default function Home() {
    *
    * @param {*} needSigner - True if you need the signer, default false otherwise
    */
+
   const getProviderOrSigner = async (needSigner = false) => {
     // Connect to Metamask
     // Since we store `web3Modal` as a reference, we need to access the `current` value to get access to the underlying object
@@ -69,7 +98,12 @@ export default function Home() {
     // If user is not connected to the Mumbai network, let them know and throw an error
     const { chainId } = await web3Provider.getNetwork();
     if (chainId !== 80001) {
-      window.alert("Change the network to Mumbai");
+      if (showWarning) {
+        window.alert(
+          "Change the network to Mumbai by clicking the 'Switch to Mumbai' button in order to play the game."
+        );
+        showWarning = false;
+      }
       throw new Error("Change network to Mumbai");
     }
 
@@ -238,6 +272,16 @@ export default function Home() {
     }
   }, [walletConnected]);
 
+  // Change network to Mumbai button
+
+  const changeToMumbaiButton = () => {
+    return (
+      <button onClick={switchAddMumbai} className={styles.button}>
+        Switch to Mumbai
+      </button>
+    );
+  };
+
   /*
     renderButton: Returns a button based on the state of the dapp
   */
@@ -311,7 +355,7 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title>LW3Punks</title>
+        <title>Lottery on Blockchain</title>
         <meta name="description" content="LW3Punks-Dapp" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -323,6 +367,7 @@ export default function Home() {
             entire lottery pool
           </div>
           {renderButton()}
+          {changeToMumbaiButton()}
           {logs &&
             logs.map((log, index) => (
               <div className={styles.log} key={index}>
@@ -335,7 +380,7 @@ export default function Home() {
         </div>
       </div>
 
-      <footer className={styles.footer}>Made with &#10084; by Your Name</footer>
+      <footer className={styles.footer}>Made with &#10084; by Sahil</footer>
     </div>
   );
 }
